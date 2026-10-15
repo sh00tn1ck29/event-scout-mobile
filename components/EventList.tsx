@@ -11,6 +11,7 @@ interface EventListProps {
   favoriteIds?: ReadonlySet<string>;
   onFavoritePress?: (event: Event) => void;
   isLoading?: boolean;
+  error?: string | null;
   emptyTitle?: string;
   emptyDescription?: string;
 }
@@ -21,11 +22,28 @@ export function EventList({
   favoriteIds,
   onFavoritePress,
   isLoading = false,
+  error = null,
   emptyTitle = 'Nie znaleziono wydarzeń',
   emptyDescription = 'Spróbuj zmienić wyszukiwanie lub wybraną kategorię.',
 }: EventListProps) {
   if (isLoading) {
-    return <LoadingIndicator />;
+    return (
+      <View style={styles.stateContainer}>
+        <LoadingIndicator />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.stateContainer}>
+        <EmptyState
+          iconName="alert-circle-outline"
+          title="Nie udało się wczytać wydarzeń"
+          description={error}
+        />
+      </View>
+    );
   }
 
   return (
@@ -54,6 +72,10 @@ export function EventList({
 }
 
 const styles = StyleSheet.create({
+  stateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   content: {
     paddingBottom: theme.spacing.xl,
   },

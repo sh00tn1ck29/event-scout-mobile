@@ -6,11 +6,12 @@ import { EmptyState } from '../../components/EmptyState';
 import { FavoriteButton } from '../../components/FavoriteButton';
 import { theme } from '../../constants/theme';
 import { useFavorites } from '../../context/FavoritesContext';
-import { mockEvents } from '../../data/mockEvents';
+import { useEvents } from '../../hooks/useEvents';
 
 export default function EventRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const event = mockEvents.find((item) => item.id === id);
+  const { events, isLoading, error } = useEvents();
+  const event = events.find((item) => item.id === id);
   const { isFavorite, toggleFavorite } = useFavorites();
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = Boolean(event?.imageUrl) && !imageFailed;
@@ -26,7 +27,19 @@ export default function EventRoute() {
           headerStyle: { backgroundColor: theme.colors.background },
         }}
       />
-      {event ? (
+      {isLoading ? (
+        <View style={styles.notFound}>
+          <Text style={styles.loadingText}>Ładowanie wydarzenia…</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.notFound}>
+          <EmptyState
+            iconName="alert-circle-outline"
+            title="Nie udało się wczytać wydarzenia"
+            description={error}
+          />
+        </View>
+      ) : event ? (
         <ScrollView
           style={styles.container}
           contentContainerStyle={styles.content}
@@ -210,5 +223,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     backgroundColor: theme.colors.background,
+  },
+  loadingText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.body,
+    textAlign: 'center',
   },
 });

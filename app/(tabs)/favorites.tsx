@@ -5,15 +5,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import { EventList } from '../../components/EventList';
 import { theme } from '../../constants/theme';
 import { useFavorites } from '../../context/FavoritesContext';
-import { mockEvents } from '../../data/mockEvents';
+import { useEvents } from '../../hooks/useEvents';
 import type { Event } from '../../types/event';
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { events, isLoading, error } = useEvents();
   const favoriteEvents = useMemo(
-    () => mockEvents.filter((event) => favoriteIds.has(event.id)),
-    [favoriteIds],
+    () => events.filter((event) => favoriteIds.has(event.id)),
+    [events, favoriteIds],
   );
 
   const handleEventPress = (event: Event) => {
@@ -34,6 +35,8 @@ export default function FavoritesScreen() {
       <EventList
         events={favoriteEvents}
         onEventPress={handleEventPress}
+        isLoading={isLoading}
+        error={error}
         favoriteIds={favoriteIds}
         onFavoritePress={(event) => toggleFavorite(event.id)}
         emptyTitle="Nie masz jeszcze ulubionych"

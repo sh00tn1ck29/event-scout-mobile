@@ -6,25 +6,26 @@ import { CategoryFilter } from '../../components/CategoryFilter';
 import { EventList } from '../../components/EventList';
 import { SearchBar } from '../../components/SearchBar';
 import { theme } from '../../constants/theme';
-import { mockEvents } from '../../data/mockEvents';
 import { useFavorites } from '../../context/FavoritesContext';
+import { useEvents } from '../../hooks/useEvents';
 import type { Event } from '../../types/event';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { favoriteIds, toggleFavorite } = useFavorites();
+  const { events, isLoading, error } = useEvents();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Wszystkie');
 
   const categories = useMemo(
-    () => [...new Set(mockEvents.map((event) => event.category))],
-    [],
+    () => [...new Set(events.map((event) => event.category))],
+    [events],
   );
 
   const visibleEvents = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLocaleLowerCase('pl-PL');
 
-    return mockEvents.filter((event) => {
+    return events.filter((event) => {
       const matchesCategory =
         selectedCategory === 'Wszystkie' ||
         event.category === selectedCategory;
@@ -41,7 +42,7 @@ export default function HomeScreen() {
 
       return matchesCategory && matchesSearch;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [events, searchQuery, selectedCategory]);
 
   const handleEventPress = (event: Event) => {
     router.push({
@@ -67,14 +68,14 @@ export default function HomeScreen() {
           onSelectCategory={setSelectedCategory}
         />
         <Text style={styles.resultCount}>
-          {visibleEvents.length === 1
-            ? '1 wydarzenie'
-            : `${visibleEvents.length} wydarzeń`}
+          Wydarzeń: {visibleEvents.length}
         </Text>
       </View>
       <EventList
         events={visibleEvents}
         onEventPress={handleEventPress}
+        isLoading={isLoading}
+        error={error}
         favoriteIds={favoriteIds}
         onFavoritePress={(event) => toggleFavorite(event.id)}
         emptyTitle="Nie znaleziono wydarzeń"

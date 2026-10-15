@@ -7,10 +7,12 @@ import { EventList } from '../../components/EventList';
 import { SearchBar } from '../../components/SearchBar';
 import { theme } from '../../constants/theme';
 import { mockEvents } from '../../data/mockEvents';
+import { useFavorites } from '../../context/FavoritesContext';
 import type { Event } from '../../types/event';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { favoriteIds, toggleFavorite } = useFavorites();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Wszystkie');
 
@@ -73,6 +75,8 @@ export default function HomeScreen() {
       <EventList
         events={visibleEvents}
         onEventPress={handleEventPress}
+        favoriteIds={favoriteIds}
+        onFavoritePress={(event) => toggleFavorite(event.id)}
         emptyTitle="Nie znaleziono wydarzeń"
         emptyDescription="Zmień frazę lub kategorię, aby zobaczyć inne propozycje."
       />

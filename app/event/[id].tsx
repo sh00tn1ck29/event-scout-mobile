@@ -3,12 +3,15 @@ import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
+import { FavoriteButton } from '../../components/FavoriteButton';
 import { theme } from '../../constants/theme';
+import { useFavorites } from '../../context/FavoritesContext';
 import { mockEvents } from '../../data/mockEvents';
 
 export default function EventRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const event = mockEvents.find((item) => item.id === id);
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = Boolean(event?.imageUrl) && !imageFailed;
 
@@ -49,7 +52,13 @@ export default function EventRoute() {
           </View>
           <View style={styles.details}>
             <Text style={styles.category}>{event.category}</Text>
-            <Text style={styles.title}>{event.title}</Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{event.title}</Text>
+              <FavoriteButton
+                isFavorite={isFavorite(event.id)}
+                onPress={() => toggleFavorite(event.id)}
+              />
+            </View>
             <View style={styles.metadataCard}>
               <MetadataRow
                 icon="calendar-outline"
@@ -127,6 +136,11 @@ const styles = StyleSheet.create({
   details: {
     paddingHorizontal: theme.spacing.xl,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
   category: {
     color: theme.colors.primary,
     fontSize: theme.typography.caption,
@@ -134,6 +148,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   title: {
+    flex: 1,
     marginTop: theme.spacing.sm,
     color: theme.colors.text,
     fontSize: 28,

@@ -1,8 +1,16 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
+import { EmptyState } from '../../components/EmptyState';
+import { theme } from '../../constants/theme';
+import { mockEvents } from '../../data/mockEvents';
 
 export default function EventRoute() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const event = mockEvents.find((item) => item.id === id);
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(event?.imageUrl) && !imageFailed;
 
   return (
     <>
@@ -11,42 +19,181 @@ export default function EventRoute() {
           headerShown: true,
           title: 'Szczegóły wydarzenia',
           headerBackTitle: 'Wróć',
-          headerTintColor: '#4057D6',
-          headerStyle: { backgroundColor: '#F7F8FC' },
+          headerTintColor: theme.colors.primary,
+          headerStyle: { backgroundColor: theme.colors.background },
         }}
       />
-      <View style={styles.container}>
-        <Text style={styles.title}>Szczegóły wydarzenia</Text>
-        <Text style={styles.description}>
-          Docelowy widok szczegółów zostanie przygotowany w kolejnym etapie.
-        </Text>
-        <Text style={styles.identifier}>Identyfikator testowy: {id}</Text>
-      </View>
+      {event ? (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.hero}>
+            {showImage ? (
+              <Image
+                source={{ uri: event.imageUrl }}
+                onError={() => setImageFailed(true)}
+                resizeMode="cover"
+                style={styles.image}
+              />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons
+                  name="sparkles-outline"
+                  size={48}
+                  color={theme.colors.primary}
+                />
+              </View>
+            )}
+          </View>
+          <View style={styles.details}>
+            <Text style={styles.category}>{event.category}</Text>
+            <Text style={styles.title}>{event.title}</Text>
+            <View style={styles.metadataCard}>
+              <MetadataRow
+                icon="calendar-outline"
+                label="Data i godzina"
+                value={`${event.date} · ${event.time}`}
+              />
+              <View style={styles.divider} />
+              <MetadataRow
+                icon="location-outline"
+                label="Miejsce"
+                value={event.location}
+              />
+            </View>
+            <Text style={styles.sectionTitle}>O wydarzeniu</Text>
+            <Text style={styles.description}>{event.description}</Text>
+          </View>
+        </ScrollView>
+      ) : (
+        <View style={styles.notFound}>
+          <EmptyState
+            iconName="search-outline"
+            title="Nie znaleziono wydarzenia"
+            description="To wydarzenie może być niedostępne lub zostało usunięte."
+          />
+        </View>
+      )}
     </>
+  );
+}
+
+interface MetadataRowProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+}
+
+function MetadataRow({ icon, label, value }: MetadataRowProps) {
+  return (
+    <View style={styles.metadataRow}>
+      <View style={styles.metadataIcon}>
+        <Ionicons name={icon} size={20} color={theme.colors.primary} />
+      </View>
+      <View style={styles.metadataText}>
+        <Text style={styles.metadataLabel}>{label}</Text>
+        <Text style={styles.metadataValue}>{value}</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  content: {
+    paddingBottom: theme.spacing.xxl,
+  },
+  hero: {
+    height: 250,
+    margin: theme.spacing.lg,
+    overflow: 'hidden',
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.placeholder,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#F7F8FC',
+  },
+  details: {
+    paddingHorizontal: theme.spacing.xl,
+  },
+  category: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.caption,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   title: {
-    color: '#1E2440',
-    fontSize: 26,
+    marginTop: theme.spacing.sm,
+    color: theme.colors.text,
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 35,
+  },
+  metadataCard: {
+    marginTop: theme.spacing.xl,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.surface,
+  },
+  metadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  metadataIcon: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.primaryLight,
+  },
+  metadataText: {
+    flex: 1,
+  },
+  metadataLabel: {
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.caption,
+  },
+  metadataValue: {
+    marginTop: 2,
+    color: theme.colors.text,
+    fontSize: theme.typography.body,
+    fontWeight: '600',
+  },
+  divider: {
+    height: 1,
+    marginVertical: theme.spacing.md,
+    backgroundColor: theme.colors.border,
+  },
+  sectionTitle: {
+    marginTop: theme.spacing.xl,
+    color: theme.colors.text,
+    fontSize: theme.typography.subtitle,
     fontWeight: '700',
   },
   description: {
-    marginTop: 12,
-    color: '#666D82',
-    fontSize: 16,
+    marginTop: theme.spacing.sm,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.body,
     lineHeight: 24,
   },
-  identifier: {
-    marginTop: 24,
-    color: '#858BA3',
-    fontSize: 13,
+  notFound: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: theme.colors.background,
   },
 });

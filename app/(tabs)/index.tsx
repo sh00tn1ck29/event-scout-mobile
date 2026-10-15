@@ -1,63 +1,121 @@
-import { Link } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View } from 'react-native';
+import { CategoryFilter } from '../../components/CategoryFilter';
+import { EventList } from '../../components/EventList';
+import { SearchBar } from '../../components/SearchBar';
+import { theme } from '../../constants/theme';
+import { mockEvents } from '../../data/mockEvents';
+import type { Event } from '../../types/event';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Wszystkie');
+
+  const categories = useMemo(
+    () => [...new Set(mockEvents.map((event) => event.category))],
+    [],
+  );
+
+  const visibleEvents = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLocaleLowerCase('pl-PL');
+
+    return mockEvents.filter((event) => {
+      const matchesCategory =
+        selectedCategory === 'Wszystkie' ||
+        event.category === selectedCategory;
+      const matchesSearch =
+        normalizedQuery.length === 0 ||
+        [
+          event.title,
+          event.description,
+          event.category,
+          event.location,
+        ].some((value) =>
+          value.toLocaleLowerCase('pl-PL').includes(normalizedQuery),
+        );
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [searchQuery, selectedCategory]);
+
+  const handleEventPress = (event: Event) => {
+    router.push({
+      pathname: '/event/[id]',
+      params: { id: event.id },
+    });
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.eyebrow}>EVENT SCOUT</Text>
-      <Text style={styles.title}>Wydarzenia</Text>
-      <Text style={styles.description}>
-        Ekran główny z wyszukiwaniem i listą wydarzeń zostanie przygotowany w
-        kolejnym etapie.
-      </Text>
-      <Link
-        href={{ pathname: '/event/[id]', params: { id: 'demo' } }}
-        asChild
-      >
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Sprawdź nawigację do szczegółów</Text>
-        </Pressable>
-      </Link>
-    </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.eyebrow}>EVENT SCOUT</Text>
+        <Text style={styles.title}>Odkrywaj wydarzenia</Text>
+        <Text style={styles.description}>
+          Znajdź coś ciekawego w swojej okolicy.
+        </Text>
+        <View style={styles.search}>
+          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        </View>
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
+        <Text style={styles.resultCount}>
+          {visibleEvents.length === 1
+            ? '1 wydarzenie'
+            : `${visibleEvents.length} wydarzeń`}
+        </Text>
+      </View>
+      <EventList
+        events={visibleEvents}
+        onEventPress={handleEventPress}
+        emptyTitle="Nie znaleziono wydarzeń"
+        emptyDescription="Zmień frazę lub kategorię, aby zobaczyć inne propozycje."
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#F7F8FC',
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
+  },
+  header: {
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
   },
   eyebrow: {
-    marginBottom: 8,
-    color: '#4057D6',
-    fontSize: 12,
+    marginBottom: theme.spacing.xs,
+    color: theme.colors.primary,
+    fontSize: theme.typography.caption,
     fontWeight: '700',
     letterSpacing: 1.5,
   },
   title: {
-    color: '#1E2440',
-    fontSize: 30,
+    color: theme.colors.text,
+    fontSize: theme.typography.title,
     fontWeight: '700',
   },
   description: {
-    marginTop: 12,
-    color: '#666D82',
+    marginTop: theme.spacing.xs,
+    color: theme.colors.textSecondary,
     fontSize: 16,
     lineHeight: 24,
   },
-  button: {
-    alignSelf: 'flex-start',
-    marginTop: 24,
-    paddingHorizontal: 18,
-    paddingVertical: 13,
-    borderRadius: 14,
-    backgroundColor: '#4057D6',
+  search: {
+    marginTop: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+  resultCount: {
+    marginTop: theme.spacing.sm,
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.caption,
     fontWeight: '600',
   },
 });

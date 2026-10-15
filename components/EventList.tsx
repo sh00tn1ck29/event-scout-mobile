@@ -5,6 +5,10 @@ import { EmptyState } from './EmptyState';
 import { EventCard } from './EventCard';
 import { LoadingIndicator } from './LoadingIndicator';
 
+function ItemSeparator() {
+  return <View style={styles.separator} />;
+}
+
 interface EventListProps {
   events: Event[];
   onEventPress: (event: Event) => void;
@@ -58,7 +62,7 @@ export function EventList({
           onFavoritePress={onFavoritePress}
         />
       )}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ItemSeparatorComponent={ItemSeparator}
       ListEmptyComponent={
         <EmptyState title={emptyTitle} description={emptyDescription} />
       }

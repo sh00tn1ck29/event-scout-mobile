@@ -1,8 +1,8 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
+import { EventImage } from '../../components/EventImage';
 import { FavoriteButton } from '../../components/FavoriteButton';
 import { theme } from '../../constants/theme';
 import { useFavorites } from '../../context/FavoritesContext';
@@ -13,8 +13,64 @@ export default function EventRoute() {
   const { events, isLoading, error } = useEvents();
   const event = events.find((item) => item.id === id);
   const { isFavorite, toggleFavorite } = useFavorites();
-  const [imageFailed, setImageFailed] = useState(false);
-  const showImage = Boolean(event?.imageUrl) && !imageFailed;
+  const content = isLoading ? (
+    <View style={styles.stateContainer}>
+      <Text style={styles.loadingText}>Ładowanie wydarzenia…</Text>
+    </View>
+  ) : error ? (
+    <View style={styles.stateContainer}>
+      <EmptyState
+        iconName="alert-circle-outline"
+        title="Nie udało się wczytać wydarzenia"
+        description={error}
+      />
+    </View>
+  ) : event ? (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <EventImage
+        imageUrl={event.imageUrl}
+        containerStyle={styles.hero}
+        placeholderIconSize={48}
+      />
+      <View style={styles.details}>
+        <Text style={styles.category}>{event.category}</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{event.title}</Text>
+          <FavoriteButton
+            isFavorite={isFavorite(event.id)}
+            onPress={() => toggleFavorite(event.id)}
+          />
+        </View>
+        <View style={styles.metadataCard}>
+          <MetadataRow
+            icon="calendar-outline"
+            label="Data i godzina"
+            value={`${event.date} · ${event.time}`}
+          />
+          <View style={styles.divider} />
+          <MetadataRow
+            icon="location-outline"
+            label="Miejsce"
+            value={event.location}
+          />
+        </View>
+        <Text style={styles.sectionTitle}>O wydarzeniu</Text>
+        <Text style={styles.description}>{event.description}</Text>
+      </View>
+    </ScrollView>
+  ) : (
+    <View style={styles.stateContainer}>
+      <EmptyState
+        iconName="search-outline"
+        title="Nie znaleziono wydarzenia"
+        description="To wydarzenie może być niedostępne lub zostało usunięte."
+      />
+    </View>
+  );
 
   return (
     <>
@@ -27,77 +83,7 @@ export default function EventRoute() {
           headerStyle: { backgroundColor: theme.colors.background },
         }}
       />
-      {isLoading ? (
-        <View style={styles.notFound}>
-          <Text style={styles.loadingText}>Ładowanie wydarzenia…</Text>
-        </View>
-      ) : error ? (
-        <View style={styles.notFound}>
-          <EmptyState
-            iconName="alert-circle-outline"
-            title="Nie udało się wczytać wydarzenia"
-            description={error}
-          />
-        </View>
-      ) : event ? (
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.hero}>
-            {showImage ? (
-              <Image
-                source={{ uri: event.imageUrl }}
-                onError={() => setImageFailed(true)}
-                resizeMode="cover"
-                style={styles.image}
-              />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Ionicons
-                  name="sparkles-outline"
-                  size={48}
-                  color={theme.colors.primary}
-                />
-              </View>
-            )}
-          </View>
-          <View style={styles.details}>
-            <Text style={styles.category}>{event.category}</Text>
-            <View style={styles.titleRow}>
-              <Text style={styles.title}>{event.title}</Text>
-              <FavoriteButton
-                isFavorite={isFavorite(event.id)}
-                onPress={() => toggleFavorite(event.id)}
-              />
-            </View>
-            <View style={styles.metadataCard}>
-              <MetadataRow
-                icon="calendar-outline"
-                label="Data i godzina"
-                value={`${event.date} · ${event.time}`}
-              />
-              <View style={styles.divider} />
-              <MetadataRow
-                icon="location-outline"
-                label="Miejsce"
-                value={event.location}
-              />
-            </View>
-            <Text style={styles.sectionTitle}>O wydarzeniu</Text>
-            <Text style={styles.description}>{event.description}</Text>
-          </View>
-        </ScrollView>
-      ) : (
-        <View style={styles.notFound}>
-          <EmptyState
-            iconName="search-outline"
-            title="Nie znaleziono wydarzenia"
-            description="To wydarzenie może być niedostępne lub zostało usunięte."
-          />
-        </View>
-      )}
+      {content}
     </>
   );
 }
@@ -136,15 +122,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.placeholder,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  imagePlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   details: {
     paddingHorizontal: theme.spacing.xl,
@@ -219,7 +196,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.body,
     lineHeight: 24,
   },
-  notFound: {
+  stateContainer: {
     flex: 1,
     justifyContent: 'center',
     backgroundColor: theme.colors.background,

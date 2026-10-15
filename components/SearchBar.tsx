@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
+  Pressable,
   StyleSheet,
   TextInput,
   View,
@@ -41,14 +42,18 @@ export function SearchBar({
         style={styles.input}
       />
       {value.length > 0 ? (
-        <Ionicons
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-          name="close-circle"
-          size={18}
-          color={theme.colors.textMuted}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Wyczyść wyszukiwanie"
           onPress={() => onChangeText('')}
-        />
+          hitSlop={8}
+        >
+          <Ionicons
+            name="close-circle"
+            size={18}
+            color={theme.colors.textMuted}
+          />
+        </Pressable>
       ) : null}
     </View>
   );

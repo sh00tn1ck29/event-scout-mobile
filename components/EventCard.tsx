@@ -1,15 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../constants/theme';
 import type { Event } from '../types/event';
 import { FavoriteButton } from './FavoriteButton';
+import { EventImage } from './EventImage';
 
 interface EventCardProps {
   event: Event;
@@ -24,9 +18,6 @@ export function EventCard({
   isFavorite = false,
   onFavoritePress,
 }: EventCardProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const showImage = Boolean(event.imageUrl) && !imageFailed;
-
   return (
     <View style={styles.card}>
       <Pressable
@@ -38,24 +29,10 @@ export function EventCard({
           pressed && styles.pressed,
         ]}
       >
-        <View style={styles.imageContainer}>
-          {showImage ? (
-            <Image
-              source={{ uri: event.imageUrl }}
-              onError={() => setImageFailed(true)}
-              resizeMode="cover"
-              style={styles.image}
-            />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons
-                name="sparkles-outline"
-                size={26}
-                color={theme.colors.primary}
-              />
-            </View>
-          )}
-        </View>
+        <EventImage
+          imageUrl={event.imageUrl}
+          containerStyle={styles.imageContainer}
+        />
         <View style={styles.details}>
           <Text numberOfLines={1} style={styles.category}>
             {event.category}
@@ -118,18 +95,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: 104,
     minHeight: 116,
-    overflow: 'hidden',
     borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.placeholder,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  imagePlaceholder: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   details: {
     flex: 1,
